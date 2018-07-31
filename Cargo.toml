@@ -1,0 +1,4 @@
+[package]
+name = "binascii"
+version = "0.1.0"
+authors = ["Naim A. <naim94a@github.com>"]
