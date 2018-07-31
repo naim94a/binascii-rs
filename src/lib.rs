@@ -1,11 +1,22 @@
 #![no_std]
 
-pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ()> {
+pub enum ConvertError {
+    // if the length of and encoded buffer isn't valid
+    InvalidInputLength,
+
+    // if the length of the output is too short
+    InvalidOutputLength,
+
+    // if the input contains invalid characters
+    InvalidInput,
+}
+
+pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     if input.len() % 2 != 0 {
-        return Err(());
+        return Err(ConvertError::InvalidInputLength);
     }
     if input.len() / 2 > output.len() {
-        return Err(());
+        return Err(ConvertError::InvalidOutputLength);
     }
 
     for block_num in 0..(input.len()/2) {
@@ -19,7 +30,7 @@ pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], (
                 *digit - b'0'
             } else {
                 // bad input
-                return Err(());
+                return Err(ConvertError::InvalidInput);
             };
             num <<= 4;
             num |= val;
@@ -30,12 +41,12 @@ pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], (
     return Ok(&mut output[0..input.len()/2]);
 }
 
-pub fn bin2hex<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ()> {
+pub fn bin2hex<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a'
         , b'b', b'c', b'd', b'e', b'f'];
 
     if output.len() < input.len() * 2 {
-        return Err(());
+        return Err(ConvertError::InvalidOutputLength);
     }
 
     for idx in 0..input.len() {
