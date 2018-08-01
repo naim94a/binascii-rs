@@ -1,4 +1,4 @@
-// #![no_std]
+#![no_std]
 
 pub enum ConvertError {
     // if the length of and encoded buffer isn't valid
@@ -88,7 +88,7 @@ pub fn b64encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
         // convert block to a u32
         let mut raw_num = 0u32;
         for i in 0..block.len() {
-            raw_num |= ((block[i] as u32) << (16 - (i * 8)));
+            raw_num |= (block[i] as u32) << (16 - (i * 8));
         }
 
         for i in 0..4 {
