@@ -2,3 +2,8 @@
 name = "binascii"
 version = "0.1.0"
 authors = ["Naim A. <naim94a@github.com>"]
+description = "Useful no-std binascii operations including base64 and base16 (hex)"
+keywords = ["base64", "base16", "hex"]
+categories = ["encoding", "no-std"]
+license = "MIT"
+repository = "https://github.com/naim94a/binascii-rs"

@@ -1,4 +1,5 @@
 #![no_std]
+#![forbid(unsafe_code)]
 
 pub enum ConvertError {
     // if the length of and encoded buffer isn't valid
@@ -63,7 +64,6 @@ pub fn b64encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
         b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h', b'i', b'j', b'k', b'l', b'm', b'n', b'o', b'p', b'q', b'r', b's', b't', b'u', b'v', b'w', b'x', b'y', b'z',
         b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9',
         b'+', b'/'];
-    assert_eq!(DIGITS.len(), 64);
 
     let data_len = input.len() * 4 / 3;
     let pad_len = if data_len % 4 != 0 {
