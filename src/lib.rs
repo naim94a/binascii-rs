@@ -105,6 +105,45 @@ pub fn bin2hex<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], C
     return Ok(&mut output[0..input.len() * 2]);
 }
 
+pub fn b32encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
+    const DIGITS: &[u8] = &[b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L',
+        b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z', b'2',
+        b'3', b'4', b'5', b'6', b'7'];
+
+    let data_len = input.len() * 8 / 5;
+    let pad_len = 8 - (data_len % 8);
+    let total_len = data_len + if pad_len == 8 { 0 } else { pad_len };
+
+    if total_len == 0 {
+        return Ok(&mut output[0..0]);
+    }
+
+    if total_len > output.len() {
+        return Result::Err(ConvertError::InvalidOutputLength);
+    }
+
+    for block_idx in 0..(1 + input.len() / 5) {
+        let max_block_len = if input.len() > block_idx * 5 + 5 { block_idx * 5 + 5 } else { input.len() };
+        let block = &input[block_idx * 5..max_block_len];
+
+        let mut num = 0u64;
+        for i in 0..block.len() {
+            num |= (block[i] as u64) << (64 - 8 - i*8);
+        }
+
+        for i in 0..8 {
+            let digit_idx = (num >> (64 - 5 - i*5)) & 0b11111;
+            output[block_idx * 8 + i] = DIGITS[digit_idx as usize];
+        }
+    }
+
+    for idx in data_len + 1..total_len {
+        output[idx] = b'=';
+    }
+
+    return Result::Ok(&mut output[..total_len]);
+}
+
 pub fn b64encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z',
         b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h', b'i', b'j', b'k', b'l', b'm', b'n', b'o', b'p', b'q', b'r', b's', b't', b'u', b'v', b'w', b'x', b'y', b'z',
