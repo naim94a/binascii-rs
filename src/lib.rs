@@ -1,17 +1,48 @@
 #![no_std]
 #![forbid(unsafe_code)]
 
+//! This crate contains encoders & decoders for various formats
+//!
+//! # Base16 (hex)
+//! - Encode using `bin2hex`
+//! - Decode using `hex2bin`
+//!
+//! # Base64
+//! - Encode using `b64encode`
+//! - Decode using `b64decode`
+
+/// Enum that identifies possible failure in encoding binary or decoding text
 pub enum ConvertError {
-    // if the length of and encoded buffer isn't valid
+    /// This error means that the `input` buffer's length is too short or not right (padding)
     InvalidInputLength,
 
-    // if the length of the output is too short
+    /// The given `output` is too short
     InvalidOutputLength,
 
-    // if the input contains invalid characters
+    /// Failure to decode due to malformed input
     InvalidInput,
 }
 
+/// Decodes base16 (hex) to binary
+///
+/// # Example
+///
+/// ```
+/// use binascii::hex2bin;
+///
+/// let mut my_output_buffer = [0u8; 200];
+///
+/// // If `hex2bin` succeedes, the result will be a `slice` of `my_output_buffer` containing the decoded data.
+/// let res = hex2bin("48656C6C6F2C20576F726C6421".as_bytes(), &mut my_output_buffer);
+///
+/// assert_eq!(res.ok().unwrap(), "Hello, World!".as_bytes());
+/// ```
+///
+/// # Failures
+/// This function will fail with:
+/// - `ConvertError::InvalidInputLength` - If the `input` slice's length is an odd number.
+/// - `ConvertError::InvalidOutputLength` - If the `output`'s length isn't at least half of `input`'s length.
+/// - `ConvertError::InvalidInput` - If the `input` contains characters that are not valid hex digits.
 pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     if input.len() % 2 != 0 {
         return Err(ConvertError::InvalidInputLength);
@@ -42,6 +73,21 @@ pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], C
     return Ok(&mut output[0..input.len()/2]);
 }
 
+/// Converts binary to base16 (hex)
+///
+/// # Example
+///
+/// ```
+/// use binascii::bin2hex;
+///
+/// let mut buffer = [0u8; 200];
+/// let input = "Hello, World!";
+/// println!("hex({}) = {:?}", input, bin2hex(input.as_bytes(), &mut buffer).ok().unwrap());
+/// ```
+///
+/// # Failures
+/// This function will fail with:
+/// - `ConvertError::InvalidOutputLength` - If the `output`'s length isn't at least 2 times the `input` length.
 pub fn bin2hex<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a'
         , b'b', b'c', b'd', b'e', b'f'];
