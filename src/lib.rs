@@ -144,6 +144,65 @@ pub fn b32encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
     return Result::Ok(&mut output[..total_len]);
 }
 
+pub fn b32decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
+
+    let padding = 8 - input.len() % 8;
+    let input_len = input.len() + if padding != 8 { padding } else { 0 };
+
+    let mut output_len = input_len * 5 / 8;
+    if output_len > output.len() {
+        return Err(ConvertError::InvalidOutputLength);
+    }
+
+    let mut eof = false;
+
+    for block_idx in 0..(1 + input.len() / 8) {
+        let block_end = if input.len() > block_idx * 8 + 8 { block_idx * 8 + 8 } else { input.len() };
+        let block = &input[block_idx * 8..block_end];
+
+        let mut num = 0u64;
+        for idx in 0..block.len() {
+            let mut ch = block[idx];
+
+            if ch == b'=' {
+                eof = true;
+                continue;
+            }
+            else if eof {
+                // this should have been padding...
+                return Err(ConvertError::InvalidInput);
+            }
+
+            if ch == b'1' {
+                ch = b'I';
+            } else if ch == b'0' {
+                ch = b'O';
+            }
+
+            let c_val = if ch >= b'A' && ch <= b'Z' {
+                ch - b'A'
+            } else if ch >= b'a' && ch <= b'z' {
+                ch - b'a'
+            } else if ch >= b'2' && ch <= b'7' {
+                ch - b'2' + 26
+            } else {
+                return Err(ConvertError::InvalidInput);
+            };
+
+            num |= (c_val as u64) << (64 - 5 - idx * 5);
+
+            output_len = block_idx * 5 + (idx * 5 / 8);
+        }
+
+        for i in 0..5 {
+            output[block_idx * 5 + i] = ((num >> (64 - 8 - i * 8)) & 0xff) as u8;
+        }
+
+    }
+
+    return Ok(&mut output[..output_len]);
+}
+
 pub fn b64encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z',
         b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h', b'i', b'j', b'k', b'l', b'm', b'n', b'o', b'p', b'q', b'r', b's', b't', b'u', b'v', b'w', b'x', b'y', b'z',
