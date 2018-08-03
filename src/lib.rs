@@ -1,15 +1,21 @@
 #![no_std]
 #![forbid(unsafe_code)]
 
-//! This crate contains encoders & decoders for various formats
+//! This crate contains encoders & decoders for various formats (base16, base32 & base64)
 //!
-//! # Base16 (hex)
-//! - Encode using `bin2hex`
-//! - Decode using `hex2bin`
+//! Most functions of this crate work the same way.
 //!
-//! # Base64
-//! - Encode using `b64encode`
-//! - Decode using `b64decode`
+//! # Quick Example
+//! ```
+//! use binascii::b32decode;
+//!
+//! let mut output_buffer = [0u8; 200];
+//! let message = "MJUW4YLTMNUWSLLSOMQGS4ZAORUGKIDCMVZXIII=";
+//!
+//! let result = b32decode(&message.as_bytes(), &mut output_buffer).ok().unwrap();
+//!
+//! assert_eq!(result, "binascii-rs is the best!".as_bytes());
+//! ```
 
 /// Enum that identifies possible failure in encoding binary or decoding text
 pub enum ConvertError {
@@ -23,7 +29,7 @@ pub enum ConvertError {
     InvalidInput,
 }
 
-/// Decodes base16 (hex) to binary
+/// **Base16 Decoder** - Converts a hexadecimal string to it's binary form.
 ///
 /// # Example
 ///
@@ -73,7 +79,7 @@ pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], C
     return Ok(&mut output[0..input.len()/2]);
 }
 
-/// Converts binary to base16 (hex)
+/// **Base16 Encoder** - Converts binary to base16 (hex)
 ///
 /// # Example
 ///
@@ -105,6 +111,10 @@ pub fn bin2hex<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], C
     return Ok(&mut output[0..input.len() * 2]);
 }
 
+/// **Base32 Encoder** - Convert arbitrary data to a base32 string
+///
+/// # Failures
+/// This function will fail with `Err(ConvertError::InvalidOutputLength)` if `output`'s length isn't least `input.len()` * 8/5.
 pub fn b32encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L',
         b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z', b'2',
@@ -144,6 +154,12 @@ pub fn b32encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
     return Result::Ok(&mut output[..total_len]);
 }
 
+/// **Base32 Decoder** - Converts a base32 encoded string to it's raw form
+///
+/// # Failures
+/// This method will fail with:
+/// - `ConvertError::InvalidOutputLength` if `output`'s length isn't at least `input.len()` * 5/8.
+/// - `ConvertError::InvalidInput` if the input contains invalid characters.
 pub fn b32decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
 
     let padding = 8 - input.len() % 8;
@@ -191,18 +207,21 @@ pub fn b32decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
 
             num |= (c_val as u64) << (64 - 5 - idx * 5);
 
-            output_len = block_idx * 5 + (idx * 5 / 8);
+            output_len = block_idx * 5 + (idx * 5 / 8) + 1;
         }
 
         for i in 0..5 {
             output[block_idx * 5 + i] = ((num >> (64 - 8 - i * 8)) & 0xff) as u8;
         }
-
     }
 
     return Ok(&mut output[..output_len]);
 }
 
+/// **Base64 Encoder** - Converts data to a base64 encoded string.
+///
+/// # Failures
+/// This function will return `Err(ConvertError::InvalidOutputLength)` if `output`'s length isn't at least `input.len()` * 4 /3.
 pub fn b64encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z',
         b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h', b'i', b'j', b'k', b'l', b'm', b'n', b'o', b'p', b'q', b'r', b's', b't', b'u', b'v', b'w', b'x', b'y', b'z',
@@ -249,6 +268,13 @@ pub fn b64encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
     return Ok(&mut output[0..required_len]);
 }
 
+/// **Base64 Decoder** - Converts a base64 encoded string to it's binary form.
+///
+/// # Failures
+/// This function will fail with:
+/// - `ConvertError::InvalidInputLength` - If the input length isn't divisable by 4 (bad padding)
+/// - `ConvertError::InvalidOutputLength` - If `output`'s length isn't at least 3/4s of `input`'s length
+/// - `ConvertError::InvalidInput` - If an invalid character was encountered while decoding
 pub fn b64decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     if input.len() % 4 != 0 {
         return Err(ConvertError::InvalidInputLength);
@@ -260,7 +286,7 @@ pub fn b64decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
         return Err(ConvertError::InvalidOutputLength);
     }
 
-    for block_idx in 0..(input.len() / 3) {
+    for block_idx in 0..(input.len() / 4) {
         let block = &input[block_idx * 4..(block_idx * 4 + 4)];
 
         let mut num = 0u32;
@@ -303,6 +329,7 @@ pub fn b64decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
 #[cfg(test)]
 mod tests {
     use super::*;
+    const SAMPLE_DATA: &str = "This is a short sentence the we'll use for testing.";
 
     #[test]
     fn test_hex2bin() {
@@ -331,5 +358,35 @@ mod tests {
 
         // short buffer
         assert!(bin2hex(&[0x1f, 0xf2], &mut buffer[0..2]).is_err());
+    }
+
+    #[test]
+    fn base32_sanity() {
+        for length in 0..30 {
+            let mut output = [0u8; 500];
+            let mut dec_out = [0u8; 200];
+            let input = &SAMPLE_DATA[..length].as_bytes();
+
+            let encoded_output = b32encode(&input, &mut output).ok().unwrap();
+
+            let decoded_output = b32decode(&encoded_output, &mut dec_out).ok().unwrap();
+
+            assert_eq!(input, &decoded_output);
+        }
+    }
+
+    #[test]
+    fn base64_sanity() {
+        for length in 0..30 {
+            let mut output = [0u8; 500];
+            let mut dec_out = [0u8; 200];
+            let input = &SAMPLE_DATA[..length].as_bytes();
+
+            let encoded_output = b64encode(&input, &mut output).ok().unwrap();
+
+            let decoded_output = b64decode(&encoded_output, &mut dec_out).ok().unwrap();
+
+            assert_eq!(input, &decoded_output);
+        }
     }
 }
