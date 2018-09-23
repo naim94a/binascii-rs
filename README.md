@@ -14,7 +14,7 @@ Rust implementation of useful binascii functions.
 * Add `binascii` to your package's `Cargo.toml`:
     ```toml
     [dependencies]
-    binascii = "0.1.1"
+    binascii = "0.1"
     ```
 * The API is very simple, head over to https://docs.rs/binascii/.
 
