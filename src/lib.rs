@@ -17,6 +17,9 @@
 //! assert_eq!(result, "binascii-rs is the best!".as_bytes());
 //! ```
 
+#[cfg(test)]
+mod tests;
+
 /// Enum that identifies possible failure in encoding binary or decoding text
 pub enum ConvertError {
     /// This error means that the `input` buffer's length is too short or not right (padding)
@@ -161,7 +164,6 @@ pub fn b32encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
 /// - `ConvertError::InvalidOutputLength` if `output`'s length isn't at least `input.len()` * 5/8.
 /// - `ConvertError::InvalidInput` if the input contains invalid characters.
 pub fn b32decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
-
     let padding = 8 - input.len() % 8;
     let input_len = input.len() + if padding != 8 { padding } else { 0 };
 
@@ -208,6 +210,10 @@ pub fn b32decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
             num |= (c_val as u64) << (64 - 5 - idx * 5);
 
             output_len = block_idx * 5 + (idx * 5 / 8) + 1;
+        }
+
+        if block_idx * 5 + 5 > output.len() {
+            return Err(ConvertError::InvalidOutputLength);
         }
 
         for i in 0..5 {
@@ -324,69 +330,4 @@ pub fn b64decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
     }
 
     return Ok(&mut output[0..output_length]);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    const SAMPLE_DATA: &str = "This is a short sentence the we'll use for testing.";
-
-    #[test]
-    fn test_hex2bin() {
-        let mut output_buffer = [0u8; 100];
-        let input = "1f2F3d4d".as_bytes();
-
-        // check good case
-        assert_eq!(hex2bin(&input, &mut output_buffer).ok().unwrap(), &[0x1f, 0x2f, 0x3d, 0x4d]);
-
-        // check bad input
-        assert!(hex2bin("z1".as_bytes(), &mut output_buffer).is_err());
-
-        // check short output buffer
-        assert!(hex2bin("a1a2a3a4".as_bytes(), &mut output_buffer[0..2]).is_err());
-
-        // check odd input
-        assert!(hex2bin("a".as_bytes(), &mut output_buffer).is_err());
-    }
-
-    #[test]
-    fn test_bin2hex() {
-        let mut buffer = [0u8; 200];
-
-        // normal use
-        assert_eq!(bin2hex(&[0x1f, 0xf2], &mut buffer).ok().unwrap(), "1ff2".as_bytes());
-
-        // short buffer
-        assert!(bin2hex(&[0x1f, 0xf2], &mut buffer[0..2]).is_err());
-    }
-
-    #[test]
-    fn base32_sanity() {
-        for length in 0..30 {
-            let mut output = [0u8; 500];
-            let mut dec_out = [0u8; 200];
-            let input = &SAMPLE_DATA[..length].as_bytes();
-
-            let encoded_output = b32encode(&input, &mut output).ok().unwrap();
-
-            let decoded_output = b32decode(&encoded_output, &mut dec_out).ok().unwrap();
-
-            assert_eq!(input, &decoded_output);
-        }
-    }
-
-    #[test]
-    fn base64_sanity() {
-        for length in 0..30 {
-            let mut output = [0u8; 500];
-            let mut dec_out = [0u8; 200];
-            let input = &SAMPLE_DATA[..length].as_bytes();
-
-            let encoded_output = b64encode(&input, &mut output).ok().unwrap();
-
-            let decoded_output = b64decode(&encoded_output, &mut dec_out).ok().unwrap();
-
-            assert_eq!(input, &decoded_output);
-        }
-    }
 }
