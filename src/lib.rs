@@ -21,6 +21,7 @@
 mod tests;
 
 /// Enum that identifies possible failure in encoding binary or decoding text
+#[derive(Debug, PartialEq)]
 pub enum ConvertError {
     /// This error means that the `input` buffer's length is too short or not right (padding)
     InvalidInputLength,
@@ -302,6 +303,21 @@ pub fn b64decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
             if ch == b'=' {
                 if i < 2 {
                     return Err(ConvertError::InvalidInput);
+                }
+
+                // Confirm that the padding bits actually contain zeros, or reject the input
+                if i == 2 {
+                    // This is RFC section 4.2: we should have XY==
+                    // and the 12 bits represented by XY should end in 4 zeros, so that
+                    // there are exactly 8 bits of payload
+                    if block[3] != b'=' { return Err(ConvertError::InvalidInput); }
+                    if num & 0x00ffffff != 0 { return Err(ConvertError::InvalidInput); }
+                }
+                if i == 3 {
+                    // This is RFC section 4.3: we should have XYZ=
+                    // and the 18 bits represented by XYZ should end in 2 zeros, so that
+                    // there are exactly 16 bits of payload
+                    if num & 0x0000ffff != 0 { return Err(ConvertError::InvalidInput); }
                 }
 
                 output_length = block_idx * 3 + i - 1;

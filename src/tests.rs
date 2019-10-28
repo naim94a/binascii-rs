@@ -60,6 +60,64 @@ fn base64_sanity() {
     }
 }
 
+#[test]
+fn base64_padding_checks() {
+    {
+        let invalid = "00==";
+        let mut decoded = [0u8; 3];
+        assert_eq!(b64decode(invalid.as_bytes(), &mut decoded[..]).err().expect("Accepted invalid input"), ConvertError::InvalidInput);
+    }
+
+    {
+        let invalid = "001=";
+        let mut decoded = [0u8; 3];
+        assert_eq!(b64decode(invalid.as_bytes(), &mut decoded[..]).err().expect("Accepted invalid input"), ConvertError::InvalidInput);
+    }
+
+    {
+        let valid = "0A==";
+        let mut decoded = [0u8; 3];
+        b64decode(valid.as_bytes(), &mut decoded[..]).ok().unwrap();
+    }
+
+    {
+        let valid = "0AA=";
+        let mut decoded = [0u8; 3];
+        b64decode(valid.as_bytes(), &mut decoded[..]).ok().unwrap();
+    }
+
+    {
+        let valid = "0A00";
+        let mut decoded = [0u8; 3];
+        b64decode(valid.as_bytes(), &mut decoded[..]).ok().unwrap();
+    }
+}
+
+// Check if round tripping an encoded text produces an example of Base64 encoding malleability (bad)
+fn malleability_check(encoded: &[u8]) {
+    let mut buffer = [0u8; 1000];
+    if let Ok(result1) = b64decode(encoded, &mut buffer) {
+        let mut buffer2 = [0u8; 1000];
+        if let Ok(result2) = b64encode(result1, &mut buffer2) {
+            assert_eq!(encoded, result2, "two different encodings of same payload were found, base64 encoding is malleable!");
+        }
+    }
+}
+
+// Some of these patterns are valid encodings and some are invalid, ensure that
+// either round-tripping them produces an error, or produces the same encoded
+// string, so that there are no two different valid encodings of the same payload.
+#[test]
+fn base64_malleability_checks() {
+    malleability_check(b"00==");
+    malleability_check(b"000=");
+    malleability_check(b"00A=");
+    malleability_check(b"001=");
+    malleability_check(b"0A==");
+    malleability_check(b"0AA=");
+    malleability_check(b"A00=");
+}
+
 fn decode_tester<F>(f: F) where for <'a> F: Fn(&[u8], &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DATA: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
