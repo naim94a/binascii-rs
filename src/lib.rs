@@ -53,6 +53,7 @@ pub enum ConvertError {
 /// - `ConvertError::InvalidInputLength` - If the `input` slice's length is an odd number.
 /// - `ConvertError::InvalidOutputLength` - If the `output`'s length isn't at least half of `input`'s length.
 /// - `ConvertError::InvalidInput` - If the `input` contains characters that are not valid hex digits.
+#[cfg(feature = "decode")]
 pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     if input.len() % 2 != 0 {
         return Err(ConvertError::InvalidInputLength);
@@ -98,6 +99,7 @@ pub fn hex2bin<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], C
 /// # Failures
 /// This function will fail with:
 /// - `ConvertError::InvalidOutputLength` - If the `output`'s length isn't at least 2 times the `input` length.
+#[cfg(feature = "encode")]
 pub fn bin2hex<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a'
         , b'b', b'c', b'd', b'e', b'f'];
@@ -119,6 +121,7 @@ pub fn bin2hex<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], C
 ///
 /// # Failures
 /// This function will fail with `Err(ConvertError::InvalidOutputLength)` if `output`'s length isn't least `input.len()` * 8/5.
+#[cfg(feature = "encode")]
 pub fn b32encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L',
         b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z', b'2',
@@ -164,6 +167,7 @@ pub fn b32encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
 /// This method will fail with:
 /// - `ConvertError::InvalidOutputLength` if `output`'s length isn't at least `input.len()` * 5/8.
 /// - `ConvertError::InvalidInput` if the input contains invalid characters.
+#[cfg(feature = "decode")]
 pub fn b32decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     let padding = 8 - input.len() % 8;
     let input_len = input.len() + if padding != 8 { padding } else { 0 };
@@ -229,6 +233,7 @@ pub fn b32decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
 ///
 /// # Failures
 /// This function will return `Err(ConvertError::InvalidOutputLength)` if `output`'s length isn't at least `input.len()` * 4 /3.
+#[cfg(feature = "encode")]
 pub fn b64encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     const DIGITS: &[u8] = &[b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L', b'M', b'N', b'O', b'P', b'Q', b'R', b'S', b'T', b'U', b'V', b'W', b'X', b'Y', b'Z',
         b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h', b'i', b'j', b'k', b'l', b'm', b'n', b'o', b'p', b'q', b'r', b's', b't', b'u', b'v', b'w', b'x', b'y', b'z',
@@ -282,6 +287,7 @@ pub fn b64encode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8],
 /// - `ConvertError::InvalidInputLength` - If the input length isn't divisable by 4 (bad padding)
 /// - `ConvertError::InvalidOutputLength` - If `output`'s length isn't at least 3/4s of `input`'s length
 /// - `ConvertError::InvalidInput` - If an invalid character was encountered while decoding
+#[cfg(feature = "decode")]
 pub fn b64decode<'a>(input: &[u8], output: &'a mut [u8]) -> Result<&'a mut [u8], ConvertError> {
     if input.len() % 4 != 0 {
         return Err(ConvertError::InvalidInputLength);
