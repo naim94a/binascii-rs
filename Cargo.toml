@@ -9,5 +9,10 @@ license = "MIT"
 repository = "https://github.com/naim94a/binascii-rs"
 readme = "README.md"
 
+[features]
+default = ["encode", "decode"]
+encode = []
+decode = []
+
 [badges]
 travis-ci = { repository = "naim94a/binascii-rs", branch = "master" }
