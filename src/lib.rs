@@ -1,4 +1,4 @@
-#![no_std]
+#![cfg_attr(not(feature = "error"), no_std)]
 #![forbid(unsafe_code)]
 
 //! This crate contains encoders & decoders for various formats (base16, base32 & base64)
@@ -43,6 +43,9 @@ impl core::fmt::Display for ConvertError {
         }
     }
 }
+
+#[cfg(feature = "error")]
+impl std::error::Error for ConvertError {}
 
 /// **Base16 Decoder** - Converts a hexadecimal string to it's binary form.
 ///
