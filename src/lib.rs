@@ -33,6 +33,17 @@ pub enum ConvertError {
     InvalidInput,
 }
 
+impl core::fmt::Display for ConvertError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        use ConvertError::*;
+        match self {
+            InvalidInputLength => write!(f, "Input buffer length too short or incorrect padding."),
+            InvalidOutputLength => write!(f, "Output buffer too short."),
+            InvalidInput => write!(f, "Failure to decode due to malformed input."),
+        }
+    }
+}
+
 /// **Base16 Decoder** - Converts a hexadecimal string to it's binary form.
 ///
 /// # Example
