@@ -13,7 +13,7 @@ readme = "README.md"
 default = ["encode", "decode"]
 encode = []
 decode = []
-error = []
+std = []
 
 [badges]
 travis-ci = { repository = "naim94a/binascii-rs", branch = "master" }
