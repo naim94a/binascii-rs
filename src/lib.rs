@@ -1,4 +1,4 @@
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]
 
 //! This crate contains encoders & decoders for various formats (base16, base32 & base64)
@@ -32,6 +32,20 @@ pub enum ConvertError {
     /// Failure to decode due to malformed input
     InvalidInput,
 }
+
+impl core::fmt::Display for ConvertError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        use ConvertError::*;
+        match self {
+            InvalidInputLength => write!(f, "Input buffer length too short or incorrect padding."),
+            InvalidOutputLength => write!(f, "Output buffer too short."),
+            InvalidInput => write!(f, "Failure to decode due to malformed input."),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ConvertError {}
 
 /// **Base16 Decoder** - Converts a hexadecimal string to it's binary form.
 ///
