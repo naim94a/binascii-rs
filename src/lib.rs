@@ -20,6 +20,9 @@
 #[cfg(test)]
 mod tests;
 
+/// WARNING: Experimental, these implementations will likely replace the functions found in the crate's root in the future.
+pub mod iters;
+
 /// Enum that identifies possible failure in encoding binary or decoding text
 #[derive(Debug, PartialEq)]
 pub enum ConvertError {

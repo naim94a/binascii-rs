@@ -8,6 +8,7 @@ categories = ["encoding", "no-std"]
 license = "MIT"
 repository = "https://github.com/naim94a/binascii-rs"
 readme = "README.md"
+edition = "2018"
 
 [features]
 default = ["encode", "decode"]
@@ -17,3 +18,11 @@ std = []
 
 [badges]
 travis-ci = { repository = "naim94a/binascii-rs", branch = "master" }
+
+[dev-dependencies]
+criterion = "0.3"
+rand = "0.7"
+
+[[bench]]
+name = "binascii"
+harness = false
