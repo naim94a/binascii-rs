@@ -9,6 +9,8 @@ license = "MIT"
 repository = "https://github.com/naim94a/binascii-rs"
 readme = "README.md"
 
+exclude = ["fuzz"]
+
 [features]
 default = ["encode", "decode"]
 encode = []
