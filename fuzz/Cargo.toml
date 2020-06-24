@@ -1,0 +1,56 @@
+
+[package]
+name = "binascii-fuzz"
+version = "0.0.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.3"
+
+[dependencies.binascii]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "encode_base16"
+path = "fuzz_targets/encode_base16.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "decode_base16"
+path = "fuzz_targets/decode_base16.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "decode_base32"
+path = "fuzz_targets/decode_base32.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "encode_base32"
+path = "fuzz_targets/encode_base32.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "encode_base64"
+path = "fuzz_targets/encode_base64.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "decode_base64"
+path = "fuzz_targets/decode_base64.rs"
+test = false
+doc = false
