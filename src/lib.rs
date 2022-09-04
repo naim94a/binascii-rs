@@ -6,7 +6,7 @@
 //! Most functions of this crate work the same way.
 //!
 //! # Quick Example
-//! ```
+//! ```feature=decode
 //! use binascii::b32decode;
 //!
 //! let mut output_buffer = [0u8; 200];

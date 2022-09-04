@@ -1,6 +1,7 @@
 use super::*;
 const SAMPLE_DATA: &str = "This is a short sentence the we'll use for testing.";
 
+#[cfg(feature = "decode")]
 #[test]
 fn test_hex2bin() {
     let mut output_buffer = [0u8; 100];
@@ -19,6 +20,7 @@ fn test_hex2bin() {
     assert!(hex2bin("a".as_bytes(), &mut output_buffer).is_err());
 }
 
+#[cfg(feature = "encode")]
 #[test]
 fn test_bin2hex() {
     let mut buffer = [0u8; 200];
@@ -30,6 +32,7 @@ fn test_bin2hex() {
     assert!(bin2hex(&[0x1f, 0xf2], &mut buffer[0..2]).is_err());
 }
 
+#[cfg(all(feature = "encode", feature="decode"))]
 #[test]
 fn base32_sanity() {
     for length in 0..30 {
@@ -45,6 +48,7 @@ fn base32_sanity() {
     }
 }
 
+#[cfg(all(feature = "encode", feature="decode"))]
 #[test]
 fn base64_sanity() {
     for length in 0..30 {
@@ -60,6 +64,7 @@ fn base64_sanity() {
     }
 }
 
+#[cfg(feature="decode")]
 #[test]
 fn base64_padding_checks() {
     {
@@ -93,6 +98,7 @@ fn base64_padding_checks() {
     }
 }
 
+#[cfg(all(feature = "encode", feature="decode"))]
 // Check if round tripping an encoded text produces an example of Base64 encoding malleability (bad)
 fn malleability_check(encoded: &[u8]) {
     let mut buffer = [0u8; 1000];
@@ -107,6 +113,7 @@ fn malleability_check(encoded: &[u8]) {
 // Some of these patterns are valid encodings and some are invalid, ensure that
 // either round-tripping them produces an error, or produces the same encoded
 // string, so that there are no two different valid encodings of the same payload.
+#[cfg(all(feature = "encode", feature="decode"))]
 #[test]
 fn base64_malleability_checks() {
     malleability_check(b"00==");
@@ -131,17 +138,20 @@ fn decode_tester<F>(f: F) where for <'a> F: Fn(&[u8], &'a mut [u8]) -> Result<&'
     }
 }
 
+#[cfg(feature="decode")]
 #[test]
 fn b16_len_test() {
     decode_tester(hex2bin);
 }
 
+#[cfg(feature="decode")]
 #[test]
 fn b32_len_test() {
     decode_tester(b32decode);
 }
-#[test]
 
+#[cfg(feature="decode")]
+#[test]
 fn b64_len_test() {
     decode_tester(b64decode);
 }
